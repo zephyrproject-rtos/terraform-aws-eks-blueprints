@@ -5,7 +5,7 @@ locals {
     name             = local.name
     chart            = local.name
     repository       = "https://actions-runner-controller.github.io/actions-runner-controller"
-    version          = "0.26.0"
+    version          = "0.21.1"
     namespace        = "actions-runner-system"
     create_namespace = true
     values           = local.default_helm_values
