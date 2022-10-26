@@ -687,6 +687,14 @@ module "nvidia_device_plugin" {
   addon_context     = local.addon_context
 }
 
+module "actions_runner_controller" {
+  count             = var.enable_actions_runner_controller ? 1 : 0
+  source            = "./actions-runner-controller"
+  helm_config       = var.actions_runner_controller_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
+
 # Sample app for demo purposes
 module "app_2048" {
   source = "./app-2048"

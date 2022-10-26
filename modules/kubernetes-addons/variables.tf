@@ -1273,6 +1273,19 @@ variable "nvidia_device_plugin_helm_config" {
   default     = {}
 }
 
+#-----------Actions Runner Controller (ARC)-------------
+variable "enable_actions_runner_controller" {
+  description = "Enable Actions Runner Controller (ARC) add-on"
+  type        = bool
+  default     = false
+}
+
+variable "actions_runner_controller_helm_config" {
+  description = "Actions Runner Controller Helm Chart config"
+  type        = any
+  default     = {}
+}
+
 #-----------App 2048-----------------------
 variable "enable_app_2048" {
   description = "Enable sample app 2048"
