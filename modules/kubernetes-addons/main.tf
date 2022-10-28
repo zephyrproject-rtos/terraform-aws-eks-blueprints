@@ -196,6 +196,7 @@ module "cert_manager" {
   domain_names                      = var.cert_manager_domain_names
   install_letsencrypt_issuers       = var.cert_manager_install_letsencrypt_issuers
   letsencrypt_email                 = var.cert_manager_letsencrypt_email
+  letsencrypt_ingress_class         = var.cert_manager_letsencrypt_ingress_class
   kubernetes_svc_image_pull_secrets = var.cert_manager_kubernetes_svc_image_pull_secrets
 }
 

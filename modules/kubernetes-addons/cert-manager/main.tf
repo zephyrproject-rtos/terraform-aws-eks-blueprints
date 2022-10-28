@@ -17,6 +17,28 @@ resource "helm_release" "cert_manager_ca" {
   depends_on = [module.helm_addon]
 }
 
+resource "helm_release" "cert_manager_letsencrypt_http01" {
+  count     = var.manage_via_gitops || !var.install_letsencrypt_issuers || var.letsencrypt_ingress_class == "" ? 0 : 1
+  name      = "cert-manager-letsencrypt-http01"
+  chart     = "${path.module}/cert-manager-letsencrypt-http01"
+  version   = "0.1.0"
+  namespace = local.helm_config["namespace"]
+
+  set {
+    name  = "email"
+    value = var.letsencrypt_email
+    type  = "string"
+  }
+
+  set {
+    name  = "ingressClass"
+    value = var.letsencrypt_ingress_class
+    type  = "string"
+  }
+
+  depends_on = [module.helm_addon]
+}
+
 resource "helm_release" "cert_manager_letsencrypt_route53" {
   count     = var.manage_via_gitops || !var.install_letsencrypt_issuers ? 0 : 1
   name      = "cert-manager-letsencrypt-route53"

@@ -34,6 +34,12 @@ variable "letsencrypt_email" {
   default     = ""
 }
 
+variable "letsencrypt_ingress_class" {
+  description = "Ingress class name for Let's Encrypt HTTP01 solver."
+  type        = string
+  default     = ""
+}
+
 variable "addon_context" {
   description = "Input configuration for the addon"
   type = object({

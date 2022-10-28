@@ -692,6 +692,12 @@ variable "cert_manager_letsencrypt_email" {
   default     = ""
 }
 
+variable "cert_manager_letsencrypt_ingress_class" {
+  description = "Ingress class name for Let's Encrypt HTTP01 solver"
+  type        = string
+  default     = ""
+}
+
 variable "enable_cert_manager_csi_driver" {
   description = "Enable Cert Manager CSI Driver add-on"
   type        = bool
