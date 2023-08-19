@@ -82,12 +82,12 @@ output "worker_node_security_group_id" {
   value       = try(module.aws_eks.node_security_group_id, "EKS Node groups not enabled")
 }
 
-#-------------------------------
-# Managed Node Groups Outputs
-#-------------------------------
+#---------------------------------
+# Self-managed Node Groups Outputs
+#---------------------------------
 output "self_managed_node_groups" {
   description = "Outputs from EKS Self-managed node groups "
-  value       = var.create_eks && length(var.self_managed_node_groups) > 0 ? module.aws_eks_self_managed_node_groups.* : []
+  value       = var.create_eks && length(var.self_managed_node_groups) > 0 ? module.aws_eks_self_managed_node_groups[*] : []
 }
 
 output "self_managed_node_group_iam_role_arns" {
@@ -107,20 +107,20 @@ output "self_managed_node_group_iam_instance_profile_id" {
 
 output "self_managed_node_group_aws_auth_config_map" {
   description = "Self managed node groups AWS auth map"
-  value       = local.self_managed_node_group_aws_auth_config_map.*
+  value       = local.self_managed_node_group_aws_auth_config_map[*]
 }
 
 output "windows_node_group_aws_auth_config_map" {
   description = "Windows node groups AWS auth map"
-  value       = local.windows_node_group_aws_auth_config_map.*
+  value       = local.windows_node_group_aws_auth_config_map[*]
 }
 
-#-------------------------------
-# Managed Node Groups Outputs
-#-------------------------------
+#--------------------------------
+# EKS Managed Node Groups Outputs
+#--------------------------------
 output "managed_node_groups" {
   description = "Outputs from EKS Managed node groups "
-  value       = var.create_eks && length(var.managed_node_groups) > 0 ? module.aws_eks_managed_node_groups.* : []
+  value       = var.create_eks && length(var.managed_node_groups) > 0 ? module.aws_eks_managed_node_groups[*] : []
 }
 
 output "managed_node_groups_id" {
@@ -160,7 +160,7 @@ output "managed_node_group_iam_instance_profile_arns" {
 
 output "managed_node_group_aws_auth_config_map" {
   description = "Managed node groups AWS auth map"
-  value       = local.managed_node_group_aws_auth_config_map.*
+  value       = local.managed_node_group_aws_auth_config_map[*]
 }
 
 #-------------------------------
@@ -198,6 +198,6 @@ output "emr_on_eks_role_id" {
 # Teams(Soft Multi-tenancy) Outputs
 #-------------------------------
 output "teams" {
-  description = "Outputs from EKS Fargate profiles groups "
-  value       = var.create_eks && (length(var.platform_teams) > 0 || length(var.application_teams) > 0) ? module.aws_eks_teams.* : []
+  description = "Output of the teams module. This contains the IAM roles arn of platform and application teams"
+  value       = var.create_eks && (length(var.platform_teams) > 0 || length(var.application_teams) > 0) ? module.aws_eks_teams[*] : []
 }

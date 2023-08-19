@@ -129,6 +129,14 @@ module "argo_rollouts" {
   addon_context     = local.addon_context
 }
 
+module "argo_workflows" {
+  count             = var.enable_argo_workflows ? 1 : 0
+  source            = "./argo-workflows"
+  helm_config       = var.argo_workflows_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
+
 module "aws_efs_csi_driver" {
   count             = var.enable_aws_efs_csi_driver ? 1 : 0
   source            = "./aws-efs-csi-driver"
@@ -181,9 +189,18 @@ module "aws_node_termination_handler" {
   count                   = var.enable_aws_node_termination_handler && (length(var.auto_scaling_group_names) > 0 || var.enable_karpenter) ? 1 : 0
   source                  = "./aws-node-termination-handler"
   helm_config             = var.aws_node_termination_handler_helm_config
+  manage_via_gitops       = var.argocd_manage_add_ons
   irsa_policies           = var.aws_node_termination_handler_irsa_policies
   autoscaling_group_names = var.auto_scaling_group_names
   addon_context           = local.addon_context
+}
+
+module "appmesh_controller" {
+  count         = var.enable_appmesh_controller ? 1 : 0
+  source        = "./appmesh-controller"
+  helm_config   = var.appmesh_helm_config
+  irsa_policies = var.appmesh_irsa_policies
+  addon_context = local.addon_context
 }
 
 module "cert_manager" {
@@ -208,6 +225,14 @@ module "cert_manager_csi_driver" {
   addon_context     = local.addon_context
 }
 
+module "cert_manager_istio_csr" {
+  count             = var.enable_cert_manager_istio_csr ? 1 : 0
+  source            = "./cert-manager-istio-csr"
+  helm_config       = var.cert_manager_istio_csr_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
+
 module "cluster_autoscaler" {
   source = "./cluster-autoscaler"
 
@@ -228,14 +253,25 @@ module "coredns_autoscaler" {
 }
 
 module "crossplane" {
-  count            = var.enable_crossplane ? 1 : 0
-  source           = "./crossplane"
-  helm_config      = var.crossplane_helm_config
-  aws_provider     = var.crossplane_aws_provider
-  jet_aws_provider = var.crossplane_jet_aws_provider
-  account_id       = data.aws_caller_identity.current.account_id
-  aws_partition    = data.aws_partition.current.id
-  addon_context    = local.addon_context
+  count                = var.enable_crossplane ? 1 : 0
+  source               = "./crossplane"
+  helm_config          = var.crossplane_helm_config
+  aws_provider         = var.crossplane_aws_provider
+  upbound_aws_provider = var.crossplane_upbound_aws_provider
+  jet_aws_provider     = var.crossplane_jet_aws_provider
+  kubernetes_provider  = var.crossplane_kubernetes_provider
+  helm_provider        = var.crossplane_helm_provider
+  addon_context        = local.addon_context
+}
+
+module "datadog_operator" {
+  source = "./datadog-operator"
+
+  count = var.enable_datadog_operator ? 1 : 0
+
+  helm_config       = var.datadog_operator_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
 }
 
 module "external_dns" {
@@ -278,13 +314,20 @@ module "ingress_nginx" {
 }
 
 module "karpenter" {
-  count                     = var.enable_karpenter ? 1 : 0
-  source                    = "./karpenter"
-  helm_config               = var.karpenter_helm_config
-  irsa_policies             = var.karpenter_irsa_policies
-  node_iam_instance_profile = var.karpenter_node_iam_instance_profile
-  manage_via_gitops         = var.argocd_manage_add_ons
-  addon_context             = local.addon_context
+  source = "./karpenter"
+
+  count = var.enable_karpenter ? 1 : 0
+
+  helm_config                                 = var.karpenter_helm_config
+  irsa_policies                               = var.karpenter_irsa_policies
+  node_iam_instance_profile                   = var.karpenter_node_iam_instance_profile
+  enable_spot_termination                     = var.karpenter_enable_spot_termination_handling
+  rule_name_prefix                            = var.karpenter_event_rule_name_prefix
+  manage_via_gitops                           = var.argocd_manage_add_ons
+  addon_context                               = local.addon_context
+  sqs_queue_managed_sse_enabled               = var.sqs_queue_managed_sse_enabled
+  sqs_queue_kms_master_key_id                 = var.sqs_queue_kms_master_key_id
+  sqs_queue_kms_data_key_reuse_period_seconds = var.sqs_queue_kms_data_key_reuse_period_seconds
 }
 
 module "keda" {
@@ -312,9 +355,16 @@ module "metrics_server" {
   addon_context     = local.addon_context
 }
 
+module "kube_state_metrics" {
+  count             = var.enable_kube_state_metrics ? 1 : 0
+  source            = "./kube-state-metrics"
+  helm_config       = var.kube_state_metrics_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
+
 module "ondat" {
-  source  = "ondat/ondat-addon/eksblueprints"
-  version = "0.1.2"
+  source = "./ondat"
 
   count = var.enable_ondat ? 1 : 0
 
@@ -332,19 +382,22 @@ module "ondat" {
 }
 
 module "kube_prometheus_stack" {
-  count         = var.enable_kube_prometheus_stack ? 1 : 0
-  source        = "./kube-prometheus-stack"
-  helm_config   = var.kube_prometheus_stack_helm_config
-  addon_context = local.addon_context
+  count             = var.enable_kube_prometheus_stack ? 1 : 0
+  source            = "./kube-prometheus-stack"
+  helm_config       = var.kube_prometheus_stack_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
 }
 
 module "portworx" {
-  count         = var.enable_portworx ? 1 : 0
-  source        = "portworx/portworx-addon/eksblueprints"
-  version       = "0.0.6"
+  source = "./portworx"
+
+  count = var.enable_portworx ? 1 : 0
+
   helm_config   = var.portworx_helm_config
   addon_context = local.addon_context
 }
+
 module "prometheus" {
   count       = var.enable_prometheus ? 1 : 0
   source      = "./prometheus"
@@ -382,12 +435,23 @@ module "spark_k8s_operator" {
   addon_context     = local.addon_context
 }
 
-module "tetrate_istio" {
-  # source  = "tetratelabs/tetrate-istio-addon/eksblueprints"
-  # version = "0.0.7"
+module "strimzi_kafka_operator" {
+  count             = var.enable_strimzi_kafka_operator ? 1 : 0
+  source            = "./strimzi-kafka-operator"
+  helm_config       = var.strimzi_kafka_operator_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
 
-  # TODO - remove local source and revert to remote once
-  # https://github.com/tetratelabs/terraform-eksblueprints-tetrate-istio-addon/pull/12  is merged
+module "sysdig_agent" {
+  source = "./sysdig"
+
+  count         = var.enable_sysdig_agent ? 1 : 0
+  helm_config   = var.sysdig_agent_helm_config
+  addon_context = local.addon_context
+}
+
+module "tetrate_istio" {
   source = "./tetrate-istio"
 
   count = var.enable_tetrate_istio ? 1 : 0
@@ -404,6 +468,15 @@ module "tetrate_istio" {
   gateway_helm_config  = var.tetrate_istio_gateway_helm_config
   manage_via_gitops    = var.argocd_manage_add_ons
   addon_context        = local.addon_context
+}
+
+module "thanos" {
+  count             = var.enable_thanos ? 1 : 0
+  source            = "./thanos"
+  helm_config       = var.thanos_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+  irsa_policies     = var.thanos_irsa_policies
 }
 
 module "traefik" {
@@ -456,6 +529,7 @@ module "secrets_store_csi_driver" {
   manage_via_gitops = var.argocd_manage_add_ons
   addon_context     = local.addon_context
 }
+
 module "aws_privateca_issuer" {
   count                   = var.enable_aws_privateca_issuer ? 1 : 0
   source                  = "./aws-privateca-issuer"
@@ -656,9 +730,9 @@ module "cilium" {
   count = var.enable_cilium ? 1 : 0
 
   helm_config       = var.cilium_helm_config
+  enable_wireguard  = var.cilium_enable_wireguard
   manage_via_gitops = var.argocd_manage_add_ons
   addon_context     = local.addon_context
-
 }
 
 module "gatekeeper" {
@@ -681,8 +755,10 @@ module "local_volume_provisioner" {
 }
 
 module "nvidia_device_plugin" {
-  count             = var.enable_nvidia_device_plugin ? 1 : 0
-  source            = "./nvidia-device-plugin"
+  source = "./nvidia-device-plugin"
+
+  count = var.enable_nvidia_device_plugin ? 1 : 0
+
   helm_config       = var.nvidia_device_plugin_helm_config
   manage_via_gitops = var.argocd_manage_add_ons
   addon_context     = local.addon_context
@@ -701,4 +777,46 @@ module "app_2048" {
   source = "./app-2048"
 
   count = var.enable_app_2048 ? 1 : 0
+}
+
+module "emr_on_eks" {
+  source = "./emr-on-eks"
+
+  for_each = { for k, v in var.emr_on_eks_config : k => v if var.enable_emr_on_eks }
+
+  # Kubernetes Namespace + Role/Role Binding
+  create_namespace       = try(each.value.create_namespace, true)
+  namespace              = try(each.value.namespace, each.value.name, each.key)
+  create_kubernetes_role = try(each.value.create_kubernetes_role, true)
+
+  # Job Execution Role
+  create_iam_role               = try(each.value.create_iam_role, true)
+  oidc_provider_arn             = var.eks_oidc_provider_arn
+  s3_bucket_arns                = try(each.value.s3_bucket_arns, ["*"])
+  role_name                     = try(each.value.role_name, each.value.name, each.key)
+  iam_role_use_name_prefix      = try(each.value.iam_role_use_name_prefix, true)
+  iam_role_path                 = try(each.value.iam_role_path, null)
+  iam_role_description          = try(each.value.iam_role_description, null)
+  iam_role_permissions_boundary = try(each.value.iam_role_permissions_boundary, null)
+  iam_role_additional_policies  = try(each.value.iam_role_additional_policies, {})
+
+  # Cloudwatch Log Group
+  create_cloudwatch_log_group            = try(each.value.create_cloudwatch_log_group, true)
+  cloudwatch_log_group_arn               = try(each.value.cloudwatch_log_group_arn, "arn:aws:logs:*:*:*")
+  cloudwatch_log_group_retention_in_days = try(each.value.cloudwatch_log_group_retention_in_days, 7)
+  cloudwatch_log_group_kms_key_id        = try(each.value.cloudwatch_log_group_kms_key_id, null)
+
+  # EMR Virtual Cluster
+  name           = try(each.value.name, each.key)
+  eks_cluster_id = data.aws_eks_cluster.eks_cluster.id # Data source is tied to `sleep` to ensure data plane is ready first
+
+  tags = merge(var.tags, try(each.value.tags, {}))
+}
+
+module "consul" {
+  count             = var.enable_consul ? 1 : 0
+  source            = "./consul"
+  helm_config       = var.consul_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
 }
