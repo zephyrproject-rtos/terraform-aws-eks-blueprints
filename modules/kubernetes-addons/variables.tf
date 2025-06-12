@@ -180,6 +180,12 @@ variable "enable_cluster_autoscaler" {
   default     = false
 }
 
+variable "cluster_autoscaler_image_tag" {
+  description = "Cluster Autoscaler image tag override"
+  type        = string
+  default     = null
+}
+
 variable "cluster_autoscaler_helm_config" {
   description = "Cluster Autoscaler Helm Chart config"
   type        = any

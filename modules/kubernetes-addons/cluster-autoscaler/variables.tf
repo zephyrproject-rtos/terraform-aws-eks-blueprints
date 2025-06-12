@@ -1,3 +1,9 @@
+variable "image_tag" {
+  description = "cluster-autoscaler image tag"
+  type        = string
+  default     = null
+}
+
 variable "eks_cluster_version" {
   description = "The Kubernetes version for the cluster - used to match appropriate version for image used"
   type        = string
